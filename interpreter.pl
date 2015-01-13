@@ -1,6 +1,8 @@
 /***
-A skeleton for Assignment 3 on PROP HT2014 at DSV/SU.
-Peter Idestam-Almquist, 2014-12-23.
+An Interpreter for Assignment 3 on PROP HT2014 at DSV/SU.
+First grammar, grade C/D/E
+Loric Brevet
+Etienne Cuvillon
 ***/
 
 :- [tokenizer].
@@ -125,23 +127,26 @@ evaluate(+ParseTree,+VariablesIn,-VariablesOut):-
 evaluate(ParseTree,_,VariablesOut):-
 	ParseTree = assignment(ident(Id),assign_op,Expr,semicolon),
 	VariablesOut = [Id = Res],
-	evaluate_expr(Expr,Res).
+	evaluate_expr(Expr,nil,0,Res).
 
-evaluate_expr(expression(Term),Result):-
-	evaluate_term(Term,Result).
-evaluate_expr(expression(Term,add_op,Expr),Result):-
-	evaluate_term(Term,R1), evaluate_expr(Expr,R2), Result is R1 + R2.
-evaluate_expr(expression(Term,sub_op,Expr),Result):-
-	evaluate_term(Term,R1), evaluate_expr(Expr,R2), Result is R1 - R2.
+evaluate_expr(expression(Term),Op,Prec,Res):-
+	evaluate_term(Term,nil,0,Res2), eval(Prec,Res2,Op,Res).
+evaluate_expr(expression(Term,Op1,Expr),Op2,Prec,Res):-
+	evaluate_term(Term,nil,0,Res2), evaluate_expr(Expr,Op1,Res3,Res),
+	eval(Prec,Res2,Op2,Res3).
 
-evaluate_term(term(Factor),Result):-
-	evaluate_factor(Factor,Result).
-evaluate_term(term(Factor,mult_op,Term), Result):-
-	evaluate_factor(Factor,R1), evaluate_term(Term,R2), Result is R1 * R2.
+evaluate_term(term(Factor),Op,Prec,Res):-
+	evaluate_factor(Factor,Res2), eval(Prec,Res2,Op,Res).
+evaluate_term(term(Factor,Op1,Term),Op2,Prec,Res):-
+	evaluate_factor(Factor,Res2), evaluate_term(Term,Op1,Res3,Res),
+	eval(Prec,Res2,Op2,Res3).
 
-evaluate_term(term(Factor,div_op,Term), Result):-
-	evaluate_factor(Factor,R1), evaluate_term(Term,R2), Result is R1 / R2.
+evaluate_factor(factor(int(Int)),Int).
+evaluate_factor(factor(left_paren,Expr,right_paren), Res) :-
+	evaluate_expr(Expr,nil,0,Res).
 
-evaluate_factor(factor(int(Int)), Int).
-evaluate_factor(factor(left_paren,Expr,right_paren), Result) :-
-	evaluate_expr(Expr,Result).
+eval(X,Y,add_op,X+Y).
+eval(X,Y,sub_op,X-Y).
+eval(X,Y,mult_op,X*Y).
+eval(X,Y,div_op,X/Y).
+eval(_,Y,nil,Y).
