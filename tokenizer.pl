@@ -1,5 +1,5 @@
 /***
-A scanner and tokenizer in SICStus Prolog, which needs to be modified 
+A scanner and tokenizer in SICStus Prolog, which needs to be modified
 to work in other Prolog systems.
 Peter Idestam-Almquist, 2014-12-23.
 ***/
@@ -13,9 +13,9 @@ tokenize(File,Tokens):-
 	close(InputStream).
 
 read_from_file(InputStream,Lines2):-
-	read_line_to_codes(InputStream,Line), 
+	read_line_to_codes(InputStream,Line), /* SICStus Prolog : read_line(InputStream,Line) */
 	Line \= end_of_file, !,
-	read_from_file(InputStream,Lines1), 
+	read_from_file(InputStream,Lines1),
 	append(Line,[32|Lines1],Lines2). /* 32 = ' ' */
 read_from_file(_,[]).
 
@@ -29,7 +29,7 @@ whitespace_code(9). /* '\t' */
 whitespace_code(32). /* ' ' */
 
 tokenize_codelist([],[]).
-tokenize_codelist([Code|Cs1],CLs):- 
+tokenize_codelist([Code|Cs1],CLs):-
 	whitespace_code(Code), !,
 	remove_leading_whitespace(Cs1,Cs2),
 	tokenize_codelist(Cs2,CLs).
@@ -38,20 +38,20 @@ tokenize_codelist([Code|Cs],[[Code]|CLs]):-
 	tokenize_codelist(Cs,CLs).
 tokenize_codelist([Code|Cs1],[[Code|CL]|CLs]):-
 	digit_code(Code), !,
-	tokenize_codelist_digit(Cs1,CL,Cs2), 
+	tokenize_codelist_digit(Cs1,CL,Cs2),
 	tokenize_codelist(Cs2,CLs).
 tokenize_codelist([Code|Cs1],[[Code|CL]|CLs]):-
 	letter_code(Code), !,
-	tokenize_codelist_letter(Cs1,CL,Cs2), 
+	tokenize_codelist_letter(Cs1,CL,Cs2),
 	tokenize_codelist(Cs2,CLs).
 
 tokenize_codelist_digit([Code|Cs1],[Code|CL],Cs2):-
-	digit_code(Code), !, 
+	digit_code(Code), !,
 	tokenize_codelist_digit(Cs1,CL,Cs2).
 tokenize_codelist_digit([Code|Cs],[],[Code|Cs]).
 
 tokenize_codelist_letter([Code|Cs1],[Code|CL],Cs2):-
-	letter_code(Code), !, 
+	letter_code(Code), !,
 	tokenize_codelist_letter(Cs1,CL,Cs2).
 tokenize_codelist_letter([Code|Cs],[],[Code|Cs]).
 
@@ -67,7 +67,7 @@ symbol_code(123). /* '{' */
 symbol_code(125). /* '}' */
 
 digit_code(Code):-
-	Code >= 48, /* 48 = '0' */ 
+	Code >= 48, /* 48 = '0' */
 	Code =< 57. /* 57 = '9' */
 
 letter_code(Code):-
@@ -75,13 +75,13 @@ letter_code(Code):-
 	Code =< 122. /* 122 = 'z' */
 
 tokens_from_codelists([CodeList|CLs],[Token|Ts]):-
-	create_token(CodeList,Token), 
+	create_token(CodeList,Token),
 	tokens_from_codelists(CLs,Ts).
 tokens_from_codelists([],[]).
 
 create_token([Code|Codes],Number):-
-	digit_code(Code), 
+	digit_code(Code),
 	number_codes(Number,[Code|Codes]).
 create_token([Code|Codes],Atom):-
-	\+ digit_code(Code), 
+	\+ digit_code(Code),
 	atom_codes(Atom,[Code|Codes]).
